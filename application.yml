@@ -1,0 +1,16 @@
+yolo:
+  model: E:/ml/vilbs/models/yolo/yolo.h5
+  anchors: E:/ml/vilbs/models/yolo/yolo_anchors.txt
+  classes: E:/ml/vilbs/models/yolo/coco_classes.txt
+  gpu_num: 1
+  image: False
+
+deepfill:
+  checkpoint_dir: models/deepfill/snap-0
+  image_height: 224
+  image_width: 224
+
+feature_net:
+  model: E:/ml/vilbs/models/resnet/resnet50un.h5
+  database: E:/ml/datasets/indoor_sfdb_standard.txt
+  id_name_map: E:/ml/datasets/indoor_id_2.txt
