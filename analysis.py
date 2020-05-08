@@ -44,8 +44,7 @@ no_human_results = [SingleResult(result) for result in result_read('E:/ml/datase
 no_optimize_results = [SingleResult(result) for result in result_read('E:/ml/datasets/no_optimize_with_human_result.txt')]
 remove_human_results = [SingleResult(result) for result in result_read('E:/ml/datasets/remove_human_with_human_result.txt')]
 rough_optimize_results = [SingleResult(result) for result in result_read('E:/ml/datasets/rough_inpaint_with_human_result.txt')]
-full_optimize_results = [SingleResult(result) for result in result_read('E:/ml/datasets/full_inpaint_with_human_result.txt')]
-
+full_optimize_results = [SingleResult(result) for result in result_read('E:/ml/datasets/full_inpaint_with_human_result(reduce).txt')]
 
 def float_render(val):
     return float(format(val, ".4f"))

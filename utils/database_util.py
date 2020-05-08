@@ -11,6 +11,8 @@
 
 # import lib
 import json
+import numpy as np
+from sklearn.decomposition import PCA
 
 def read_database(database_path):
     with open(database_path, "r") as f:
@@ -78,3 +80,26 @@ def result_read(path):
             # print(line)
             data_list.append(data)
     return data_list
+
+class PCAOptimize(object):
+    def __init__(self, features, n=100):
+        self.pca = PCA(n_components=n)
+        self.pca.fit(features)
+
+    def reduce(self, feature):
+        data = np.expand_dims(feature, axis=0)
+        data = self.pca.transform(data)
+        data = np.squeeze(data)
+        return data
+
+    def reduce_batch(self, features):
+        return self.pca.transform(features)
+
+if __name__ == '__main__':
+    features, labels = read_database('E:/ml/datasets/indoor_sfdb_standard.txt')
+    optimizer = PCAOptimize(features)
+
+    data = np.ones([2, 2048])
+    data = optimizer.reduce_batch(data)
+    print(np.shape(data))
+    print(data)

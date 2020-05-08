@@ -17,7 +17,7 @@ from keras.applications.mobilenet import MobileNet
 from utils.distance_util import cos_dis
 from utils.config_util import get_config
 from utils.image_process_util import preprocess, cv_2_pil, pil_2_cv, batch_process_without_output, batch_process_with_result
-from utils.database_util import read_database, read_id_map, result_read, result_save
+from utils.database_util import read_database, read_id_map, result_read, result_save, PCAOptimize
 from common.entity import Cell, SingleResult, Context
 from inpaint.inpaint_model import InpaintCAModel
 from detect.yolo3.yolo import YOLO
@@ -92,6 +92,9 @@ class IndoorLocate(object):
 
     def init_feature_database(self):
         self.features, self.id_labels = read_database(self.config.feature_net.database)
+        self.reducer = PCAOptimize(self.features)
+        self.low_features = self.reducer.reduce_batch(self.features)
+
 
     def init_name_id_file(self):
         self.id_name_dict = read_id_map(self.config.feature_net.id_name_map)
@@ -124,15 +127,20 @@ class IndoorLocate(object):
         cell_list.sort(key=lambda cell: cell.dis, reverse=False)
         return cell_list[ : k]
 
-    def search_for_single_result(self, img, origin_id, mode = 0):
+    def search_for_single_result(self, img, origin_id, mode = 0, low = False):
         if mode > 0:
             img, detect_cost, inpaint_cost = self.image_optimize(img, mode)
         start_time = time.time()
         feature_ = self.feature_extract(img)
+        if low:
+            feature_ = self.reducer.reduce(feature_)
         answer_image_min_dis = 1000
         answer_image_avg_dis = 0
         cell_list = []
-        for feature, label in zip(self.features, self.id_labels):
+        feature_database = self.features
+        if low:
+            feature_database = self.low_features
+        for feature, label in zip(feature_database, self.id_labels):
             dis = cos_dis(feature_, feature)
             if label == origin_id:
                 if dis < answer_image_min_dis:
@@ -301,22 +309,27 @@ def search_img_test_top2(img, label):
         print('fail, origin id:', label)
 
 def record_full_optimize_img_test(img, label, item):
-    result = processor.search_for_single_result(img, label, mode=3)
+    result = processor.search_for_single_result(img, label, mode=3, low=False)
     result.pic_name = item
     return result
 
 def record_rough_optimize_img_test(img, label, item):
-    result = processor.search_for_single_result(img, label, mode=2)
+    result = processor.search_for_single_result(img, label, mode=2, low=False)
     result.pic_name = item
     return result
 
 def record_remove_img_test(img, label, item):
-    result = processor.search_for_single_result(img, label, mode=1)
+    result = processor.search_for_single_result(img, label, mode=1, low=False)
     result.pic_name = item
     return result
 
 def record_no_optimize_img_test(img, label, item):
-    result = processor.search_for_single_result(img, label, mode=0)
+    result = processor.search_for_single_result(img, label, mode=0, low=False)
+    result.pic_name = item
+    return result
+
+def record_no_human_img_test(img, label, item):
+    result = processor.search_for_single_result(img, label, mode=0, low=False)
     result.pic_name = item
     return result
 
@@ -327,9 +340,9 @@ if __name__ == '__main__':
 
     # results = batch_process_with_result('E:/ml/datasets/indoor_human', record_full_optimize_img_test)
     # print(len(results))
-    # result_save('E:/ml/datasets/full_inpaint_with_human_result.txt', results)
+    # result_save('E:/ml/datasets/full_inpaint_with_human_result(reduce).txt', results)
 
-    # results = batch_process_with_result('E:/ml/datasets/indoor_human', record_img_test)
+    # results = batch_process_with_result('E:/ml/datasets/indoor_2', record_no_human_img_test)
     # print(len(results))
     # result_save('E:/ml/datasets/no_human_result.txt', results)
 
